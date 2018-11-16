@@ -1,6 +1,7 @@
 const v3ApiKey = "71dddde08106498e1c93152088391560";
 const v4ApiKey = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3MWRkZGRlMDgxMDY0OThlMWM5MzE1MjA4ODM5MTU2MCIsInN1YiI6IjViZWNmOTAzYzNhMzY4MTJmMzAwY2YyMCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.0FTwqDrzXxRhHcjQnquX6gKOCt1RumxgtGMjjRSOoZA";
-
+const apiurl = "https://api.themoviedb.org/3/movie/550?api_key=71dddde08106498e1c93152088391560";
+//https://codepen.io/kunalkamble/pen/XXbWwN
 
 class MovieElement extends HTMLElement {
 
@@ -33,12 +34,14 @@ class MovieElement extends HTMLElement {
 
                 :host {
                     display: block;
+                    border: 1px solid red;
+                    padding: 10px;
+                    margin-bottom: 2px;
                 }
             </style>`;
 
         return tmpElem.firstChild;
     }
-
 }
 
 class MovielistElement extends HTMLElement {
@@ -52,18 +55,36 @@ class MovielistElement extends HTMLElement {
     }
 
     update (list){
-
         for (let i = 0; i< list.length; i++){
             this.shadow.appendChild(new MovieElement(list[i]));
         }
-
     }
 }
 
+class App {
+    constructor(){
+        this.modules = {};
+    }
 
+    addModule (name, module){
+        this.modules[name] = module;
+        document.getElementById(module.target).appendChild(module.composant);
+    }
+
+    getModule (name) {
+        return this.modules[name];
+    }
+}
+
+class Module {
+    constructor(target, composant){
+        this.target = target;
+        this.composant = composant;
+    }
+}
 customElements.define('movie-element', MovieElement);
 customElements.define('movielist-element', MovielistElement);
 
-let mList = new MovielistElement();
-document.getElementById("app").appendChild(mList);
-mList.update(['Rocky I','Rocky II','Rocky III']);
+
+
+
