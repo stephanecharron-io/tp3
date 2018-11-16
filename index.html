@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-    <style type="text/css">
-        movie-element{
-            border: 1px solid red;
-            padding: 10px;
-        }
-    </style>
 </head>
 <body>
 
-<div id="app"></div>
-
+<div id="movielist-container">
+</div>
 
 
 <script src="app.js"></script>
+<script>
+    let app = new App();
+    app.addModule('movieList', new Module('movielist-container', new MovielistElement()));
+    app.getModule('movieList').composant.update(['Rocky I','Rocky II','Rocky III']);
+</script>
 </body>
 </html>
