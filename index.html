@@ -1,20 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
     <title>Title</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <header>
+        <input placeholder="Search by title" type="text" />
+    </header>
 
-<div id="movielist-container">
-</div>
+
+    <div id="movielist-container">
+    </div>
 
 
-<script src="app.js"></script>
-<script>
-    let app = new App();
-    app.addModule('movieList', new Module('movielist-container', new MovielistElement()));
-    app.getModule('movieList').composant.update(['Rocky I','Rocky II','Rocky III']);
-</script>
+    <script src="app.js"></script>
+    <script>
+        let app = new App();
+        app.addModule('movieList', new Module('movielist-container', new MovielistElement()));
+        app.getModule('movieList').composant.update(['Rocky I', 'Rocky II', 'Rocky III']);
+    </script>
+
 </body>
 </html>
