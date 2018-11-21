@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <link rel="stylesheet" href="style.css">
+
+
 </head>
 <body>
     <header>
@@ -20,7 +22,8 @@
     <script>
         let app = new App();
         app.addModule('movieList', new Module('movielist-container', new MovielistElement()));
-        app.getModule('movieList').composant.update(['Rocky I', 'Rocky II', 'Rocky III']);
+        //app.addModule('chart', new Module('movielist-container', new ChartElement({step: 80, scale: 0.5})));
+       app.getModule('movieList').composant.update(movieService.getTendence());
     </script>
 
 </body>

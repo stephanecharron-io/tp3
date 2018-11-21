@@ -2,7 +2,7 @@ $configs: (
 
         chart-two: (
                 svgSize: 200px,
-                percentage: 50,
+                percentage: 0,
                 strokeWidth: 15px,
                 backgroundColor: #305556,
                 foregroundColor: #d0f09e,
@@ -99,19 +99,27 @@ $labelData: '';
 
 /* codepen styling only */
 @import url(https://fonts.googleapis.com/css?family=Abel);
+* {
+  padding: 0;
+  margin: 0;
+}
 body {
   background: #272b31;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+
+}
+
+.wrap{
+  position: relative;
+  padding: 0;
+  margin: 0;
 }
 figure {
-  margin: 1rem!important;
 }
 figcaption {
   font-family: 'Abel', sans-serif;
 }
+
 
 
 
