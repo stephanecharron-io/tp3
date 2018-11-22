@@ -6,6 +6,7 @@ const apiurl = "https://api.themoviedb.org/3/movie/550?api_key=71dddde08106498e1
 //https://uigradients.com/#MoonlitAsteroid
 //http://image.tmdb.org/t/p/w185/nBNZadXqJSdt05SHLqgT0HuC5Gm.jpg
 
+
 let iconSvg = {
     popcorn : `<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 preserveAspectRatio="none" viewBox="0 0 53.029 53.029" 
@@ -35,22 +36,88 @@ let iconSvg = {
 		<path d="M16.591,52.78l2.667-0.122l-0.489-11.979c-0.977-0.074-1.911-0.364-2.77-0.852L16.591,52.78z"/>
 	</g>
 </g>
-</svg>`
+</svg>`,
+    like: `<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 58 58" preserveAspectRatio="none" xml:space="preserve">
+<g>
+	<path d="M9.5,43c-2.757,0-5,2.243-5,5s2.243,5,5,5s5-2.243,5-5S12.257,43,9.5,43z M9.5,51c-1.654,0-3-1.346-3-3s1.346-3,3-3
+		s3,1.346,3,3S11.154,51,9.5,51z"/>
+	<path d="M56.5,35c0-2.495-1.375-3.662-2.715-4.233C54.835,29.85,55.5,28.501,55.5,27c0-2.757-2.243-5-5-5H36.134l0.729-3.41
+		c0.973-4.549,0.334-9.716,0.116-11.191C36.461,3.906,33.372,0,30.013,0h-0.239C28.178,0,25.5,0.909,25.5,7
+		c0,8.023-2.002,11.694-3.681,13.36c-1.647,1.634-3.231,1.616-3.319,1.64h-1v-2h-16v38h16v-2h28c2.757,0,5-2.243,5-5
+		c0-1.164-0.4-2.236-1.069-3.087C51.745,47.476,53.5,45.439,53.5,43c0-1.164-0.4-2.236-1.069-3.087
+		C54.745,39.476,56.5,37.439,56.5,35z M3.5,56V22h12v34H3.5z M51.5,38h-3h-8c-0.552,0-1,0.447-1,1s0.448,1,1,1h8
+		c1.654,0,3,1.346,3,3s-1.346,3-3,3h-2h-1h-7c-0.552,0-1,0.447-1,1s0.448,1,1,1h7c1.654,0,3,1.346,3,3s-1.346,3-3,3h-28V24
+		l0.969-0.001c0.097,0.019,2.42,0.05,4.682-2.144C26.037,19.059,27.5,14.061,27.5,7c0-1.867,0.295-5,2.274-5h0.239
+		C32.244,2,34.621,5.13,35,7.691c0.207,1.392,0.81,6.26-0.093,10.48L33.662,24H50.5c1.654,0,3,1.346,3,3s-1.346,3-3,3h-2h-1h-7
+		c-0.552,0-1,0.447-1,1s0.448,1,1,1h7c0.883,0,2.825,0.04,3.854,0.193C53.965,32.58,54.5,33.595,54.5,35
+		C54.5,36.654,53.154,38,51.5,38z"/>
+</g>
+</svg>`,
+    arrow: `<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	  viewBox="0 0 44.236 44.236" preserveAspectRatio="none"  xml:space="preserve">
+<g>
+	<g>
+		<path d="M22.118,44.236C9.922,44.236,0,34.314,0,22.118S9.922,0,22.118,0s22.118,9.922,22.118,22.118S34.314,44.236,22.118,44.236
+			z M22.118,1.5C10.75,1.5,1.5,10.749,1.5,22.118c0,11.368,9.25,20.618,20.618,20.618c11.37,0,20.618-9.25,20.618-20.618
+			C42.736,10.749,33.488,1.5,22.118,1.5z"/>
+		<path d="M19.341,29.884c-0.192,0-0.384-0.073-0.53-0.22c-0.293-0.292-0.293-0.768,0-1.061l6.796-6.804l-6.796-6.803
+			c-0.292-0.293-0.292-0.769,0-1.061c0.293-0.293,0.768-0.293,1.061,0l7.325,7.333c0.293,0.293,0.293,0.768,0,1.061l-7.325,7.333
+			C19.725,29.811,19.533,29.884,19.341,29.884z"/>
+	</g>
+</g>`
 
 };
 
 let movieService = {
     v3ApiKey: "71dddde08106498e1c93152088391560",
-    getTendence: async () => {
+    getTrending: async () => {
         return await fetch(`https://api.themoviedb.org/3/trending/movie/week?api_key=${movieService.v3ApiKey}`);
-
     }
 };
 
+class Router {
+    constructor (){
+        this.routes = [];
+        window.addEventListener("hashchange", function (data) {
+            app.getRouter().route(window.location.hash);
+        }, false);
+    }
+    addRoute (route) {
+        this.routes.push(route);
+        return this;
+    }
+
+    setPathNoPage (pathNoPage){
+        this.pathNoPage = pathNoPage;
+    }
+
+    getRoutes () {
+        return this.routes;
+    }
+
+    route (hash) {
+        this.getRoutes().forEach(function(route) {
+            debugger;
+            if (hash.match(new RegExp(route.path))){
+                route.ctrl();
+            }
+        })
+    }
+
+}
+
+class Route {
+    constructor(path, ctrl) {
+        this.path = path;
+        this.ctrl = ctrl;
+    }
+}
 
 class App {
     constructor(){
         this.modules = {};
+        this.router = new Router();
     }
 
     addModule (name, module){
@@ -61,6 +128,13 @@ class App {
     getModule (name) {
         return this.modules[name];
     }
+    getRouter () {
+        return this.router;
+    }
+    run(){
+        this.getRouter().route(window.location.hash);
+    }
+
 }
 
 class Module {
@@ -77,10 +151,6 @@ class MovieElement extends HTMLElement {
         this.shadow = this.attachShadow({mode: 'open'});
         this.shadow.appendChild(this.getStyle());
         this.shadow.appendChild(this.getMovieElem(movie));
-        this.addEventListener("click", () => {
-            alert('click');
-        });
-
         MovieElement.count = MovieElement.count ||  0;
         this.setAttribute('id', "movie-"+ MovieElement.count++);
     }
@@ -88,12 +158,19 @@ class MovieElement extends HTMLElement {
     getMovieElem(movie) {
         let el = document.createElement('div');
         let step = movie.vote_average *10;
-        el.innerHTML = `<div>
-                            <div class="poster"><img width="200" src="http://image.tmdb.org/t/p/w185/${movie.poster_path}"/></div>
-                            <div class="rating" v><chart-element data-option-scale="0.3" data-option-step="${step}"></chart-element>
-                            <logo-element name="popcorn" color="#ccc"></logo-element></divv>
+        let color =step > 50 ? 'green': 'red';
+        let rotate = step > 0 ? 180: 0;
+        el.innerHTML = `<a href="#/movie/${movie.id}">
                             <h2 class="title">${movie.original_title}</h2>
-                        </div>`;
+                            <div class="poster"><img width="200" src="http://image.tmdb.org/t/p/w185/${movie.poster_path}"/></div>
+                            <div class="rating">
+                                <div class="chart"><chart-element data-option-scale="0.3" data-option-step="${step}"></chart-element></div>
+                                <logo-element name="popcorn" color="#ccc"></logo-element>
+                                <div class="popularity">${movie.popularity}</div>
+                                <logo-element name="like" rotate="" color="${color}"></logo-element>
+                            </div>
+                            <div style="clear: both"></div>
+                        </a>`;
         return el.firstChild;
     }
 
@@ -104,24 +181,75 @@ class MovieElement extends HTMLElement {
                 .title {
                     color: white;
                 }  
+                a{
+                    display: block;
+                    color: white;
+                    text-decoration: none;
+                    height: 100%;
+                    width: 100%;
+                    padding: 10px;
+                }
+                
                 logo-element[name='popcorn']{
                     display: block;
-                    width: 50px;
+                    width: 35px;  
+                    margin-top: 20px;
+                    margin-left: 57px;                 
                 } 
                 
-                .title {
-                    clear:both;
+                logo-element[name='like']{
+                    display: block;
+                    width: 35px;  
+                    margin-top: 20px;
+                    margin-left: 57px;                 
+                } 
+                
+                .popularity {
+                    color: white;
+                    font-weight: bold;
+                    text-align: center;
+                }
+                .rating {
+                    width: 147px;
+                    padding-top: 10px;
+                }                                    
+                .poster {
+                    float:left;
                     
+                }
+                
+                .poster img{
+                    float:left;
+                    border-radius: 5px;
+                    border-right: 3px solid rgba(255,255,255, 0.3);
+                    border-bottom: 3px solid rgba(255,255,255, 0.2);
+                    
+                }
+                .rating {
+                    float: right;
+                }
+                h2 {
+                    min-height: 58px;
+                    text-align: center;
+                    width: 330px;
                 }
 
                 :host {
-                    display: block;
-                    border: 1px solid white;
-                    padding: 10px;
-                    margin-bottom: 2px;
+                    border: 1px solid #666666;
                     border-radius: 3px;
+                    width: 350px;
+                    float: left;
+                    margin-left: 5px;
+                    margin-right: 5px;
+                    margin-bottom: 10px;                 
                 }
-                
+                :host:hover {
+                    border: 1px solid #ffffff;
+                                
+                }
+                .chart {
+                    margin-left: 43px;
+                }
                 
             </style>`;
 
@@ -145,12 +273,63 @@ class MovielistElement extends HTMLElement {
         callback.then( (response) =>  {
             response.json().then( (data) => {
                 let results = data.results;
+                this.shadow.appendChild(this.getStyle());
+                this.shadow.appendChild(this.getNavigation(data));
                 for (let i = 0; i< results.length; i++){
                     this.shadow.appendChild(new MovieElement(results[i]));
                 }
             })
         });
     }
+    getStyle() {
+        let tmpElem = document.createElement('div');
+        tmpElem.innerHTML =
+            `<style type="text/css">
+                .navigation{
+                    text-align: center;
+                    color: white;
+                    font-size:24px;
+                    font-weight: bold;
+                    margin-bottom: 10px;
+                }
+                logo-element[name="arrow"] {
+                    display: block;
+                    width: 40px; 
+                }
+                .logoWrap {
+                    display: inline-block;
+                }
+                .left {
+                    margin-right: 20px;
+                }
+                .right {
+                    margin-left: 20px;
+                }
+                span {
+                    line-height: 40px;
+                }
+              
+            </style>`;
+
+        return tmpElem.firstChild;
+    }
+
+    getNavigation(data) {
+        let tmpElem = document.createElement('div');
+        tmpElem.innerHTML =
+            `<div class="navigation">
+                <a href="#/page/left" class="logoWrap">
+                    <logo-element rotate="180" class="left" name="arrow" color="yellow" ></logo-element>
+                 </a> 
+                    page ${data.page} of ${data.total_pages}
+                <a href="#/page/right" class="logoWrap">
+                    <logo-element rotate="0" class="right" name="arrow" color="yellow" ></logo-element>
+                 </a>     
+             </div>`;
+
+        return tmpElem.firstChild;
+    }
+
 }
 customElements.define('movielist-element', MovielistElement);
 
@@ -192,6 +371,9 @@ class ChartElement extends HTMLElement {
         let frame = -250 * pourcent;
         let time = 3 * pourcent;
         let contentAfter = "";
+        let dimensionWidth = options.scale * 100 *2;
+        let dimensionHeight = options.scale * 100 *2.7;
+        let position = (1 -  options.scale ) * 100;
 
         let tmpElem = document.createElement('div');
         tmpElem.innerHTML = `<style type="text/css">
@@ -208,15 +390,14 @@ class ChartElement extends HTMLElement {
                                 }
                                 
                                 .figureWrap {
-                                    width: 60px;
-                                    height: 60px;
-                                    background-color: red;
+                                    width: ${dimensionWidth}px;
+                                    height: ${dimensionHeight}px;
                                 }
                                 
                                 figure {
                                     position: absolute;
-                                    top:-70px;
-                                    left: -70px;
+                                    top:-${position}px;
+                                    left: -${position}px;
                                 }
                               
                                 .chart-two {
@@ -302,11 +483,8 @@ class LogoElement extends HTMLElement {
 
         let icon = this.getIconElem(this.getAttribute('name'));
         this.shadow = this.attachShadow({mode: 'open'});
-        this.shadow.appendChild(this.getStyle( {color: this.getAttribute('color') || 'white'}));
+        this.shadow.appendChild(this.getStyle( {color: this.getAttribute('color') || 'white', rotate :  this.getAttribute('rotate') || 0}));
         this.shadow.appendChild(icon);
-        this.addEventListener("click", () => {
-            alert('click');
-        });
 
         LogoElement.count = LogoElement.count ||  0;
         this.setAttribute('id', "logo-"+ LogoElement.count++);
@@ -324,7 +502,8 @@ class LogoElement extends HTMLElement {
             `<style type="text/css">
           
             :host svg{
-            fill: ${options.color};
+                fill: ${options.color};
+                transform: rotate(${options.rotate}deg);
             }
             </style>`;
 
@@ -333,6 +512,32 @@ class LogoElement extends HTMLElement {
 }
 customElements.define('logo-element', LogoElement);
 customElements.define('chart-element', ChartElement);
+
+
+
+
+let app = new App();
+app.addModule('movieList', new Module('movielist-container', new MovielistElement()));
+
+app.getRouter().addRoute(new Route('', () => {
+    app.getModule('movieList').composant.update(
+        (()=> {
+            app.getRouter().setPathNoPage('#/tranding/');
+            return movieService.getTrending();
+        })());
+}))
+    .addRoute(new Route('#/12', () => {
+    app.getModule('movieList').composant.update(
+        (()=> {
+            app.getRouter().setPathNoPage('#/tranding/');
+            return movieService.getTrending();
+        })());
+}));
+
+
+app.run();
+
+
 
 
 
