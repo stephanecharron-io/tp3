@@ -80,8 +80,8 @@ let movieService = {
 class Router {
     constructor() {
         this.routes = [];
-        this.defaultPath ="";
-        this.pathParams = {};
+        this.defaultPath = "";
+        this.current= '';
         window.addEventListener("hashchange", function (data) {
             app.getRouter().route(window.location.hash);
         }, false);
@@ -96,10 +96,6 @@ class Router {
         this.pathNoPage = pathNoPage;
     }
 
-    setDefaultPath (path) {
-        this.defaultPath = path;
-    }
-
     getRoutes() {
         return this.routes;
     }
@@ -107,14 +103,15 @@ class Router {
     route(hash) {
         this.getRoutes().forEach(function (route) {
             if (hash.match(new RegExp(route.path))) {
+                this.current = route;
                 route.ctrl();
             }
         });
     }
 
-    getRoute(path){
+    getRoute(path) {
         let decomposedPath = Route.decomposedPath(path);
-        if(!decomposedPath.length){
+        if (!decomposedPath.length) {
             return this.getRoute(this.defaultPath);
         }
 
@@ -122,11 +119,15 @@ class Router {
         let foundRoute;
 
         routes.forEach(function (route) {
-            if(decomposedPath.join('') === route.decomposedPath.join('')){
+            if (decomposedPath.join('') === route.decomposedPath.join('')) {
                 foundRoute = route;
             }
         });
         return foundRoute || this.getRoute(this.defaultPath);
+    }
+
+    getUrlParams (){
+        return {};
     }
 }
 
@@ -149,7 +150,7 @@ class Route {
         }
     }
 
-    getParam (path) {
+    getParam(path) {
 
     }
 }
@@ -312,7 +313,6 @@ class MovielistElement extends HTMLElement {
     }
 
     update(callback) {
-        let _this = this;
         callback.then((response) => {
             response.json().then((data) => {
                 let results = data.results;
@@ -576,20 +576,44 @@ app.getRouter().addRoute(new Route('', () => {
             return movieService.getTrending();
         })());
 }))
-    .addRoute(new Route('#/12/allo', () => {
+    .addRoute(new Route('#/12/allo/', () => {
         app.getModule('movieList').composant.update(
             (() => {
                 app.getRouter().setBasePath('#/tranding/');
                 return movieService.getTrending();
             })());
     }))
-    .addRoute(new Route('#/12/{:page}', () => {
+    .addRoute(new Route('#/tranding/{:page}', () => {
         app.getModule('movieList').composant.update(
             (() => {
-                console.log('#/12/{:page}');
+                console.log('#/tranding/{:page}');
                 app.getRouter().setBasePath('#/tranding/');
                 return movieService.getTrending();
             })());
+    }))
+    .addRoute(new Route('#/search/', () => {
+        app.getModule('movieList').composant.update(
+            (() => {
+                console.log('#/search/');
+                app.getRouter().setBasePath('#/search/');
+                return movieService.getTrending();
+            })());
+    }))
+    .addRoute(new Route('#/search/{:page}', () => {
+        app.getModule('movieList').composant.update(
+            (() => {
+                console.log('#/search/{:page}');
+                app.getRouter().setBasePath('#/search/');
+                return movieService.getTrending();
+            })())
+            .addRoute(new Route('#/movie/', () => {
+                app.getModule('movieList').composant.update(
+                    (() => {
+                        console.log('#/movie/');
+                        app.getRouter().setBasePath('#/movie/');
+                        return movieService.getTrending();
+                    })());
+            }))
     }));
 
 app.run();
