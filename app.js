@@ -5,10 +5,11 @@ const apiurl = "https://api.themoviedb.org/3/movie/550?api_key=71dddde08106498e1
 //https://developers.google.com/web/fundamentals/web-components/
 //https://uigradients.com/#MoonlitAsteroid
 //http://image.tmdb.org/t/p/w185/nBNZadXqJSdt05SHLqgT0HuC5Gm.jpg
+// https://api.themoviedb.org/3/trending/movie/week?api_key=71dddde08106498e1c93152088391560
 
 
 let iconSvg = {
-    popcorn : `<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+    popcorn: `<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 preserveAspectRatio="none" viewBox="0 0 53.029 53.029" 
 	 xml:space="preserve">
 <g>
@@ -72,73 +73,114 @@ let iconSvg = {
 let movieService = {
     v3ApiKey: "71dddde08106498e1c93152088391560",
     getTrending: async () => {
-        return await fetch(`https://api.themoviedb.org/3/trending/movie/week?api_key=${movieService.v3ApiKey}`);
+        return await fetch("movie.json");
     }
 };
 
 class Router {
-    constructor (){
+    constructor() {
         this.routes = [];
+        this.defaultPath ="";
+        this.pathParams = {};
         window.addEventListener("hashchange", function (data) {
             app.getRouter().route(window.location.hash);
         }, false);
     }
-    addRoute (route) {
+
+    addRoute(route) {
         this.routes.push(route);
         return this;
     }
 
-    setPathNoPage (pathNoPage){
+    setBasePath(pathNoPage) {
         this.pathNoPage = pathNoPage;
     }
 
-    getRoutes () {
+    setDefaultPath (path) {
+        this.defaultPath = path;
+    }
+
+    getRoutes() {
         return this.routes;
     }
 
-    route (hash) {
-        this.getRoutes().forEach(function(route) {
-            debugger;
-            if (hash.match(new RegExp(route.path))){
+    route(hash) {
+        this.getRoutes().forEach(function (route) {
+            if (hash.match(new RegExp(route.path))) {
                 route.ctrl();
             }
-        })
+        });
     }
 
+    getRoute(path){
+        let decomposedPath = Route.decomposedPath(path);
+        if(!decomposedPath.length){
+            return this.getRoute(this.defaultPath);
+        }
+
+        let routes = this.getRoutes();
+        let foundRoute;
+
+        routes.forEach(function (route) {
+            if(decomposedPath.join('') === route.decomposedPath.join('')){
+                foundRoute = route;
+            }
+        });
+        return foundRoute || this.getRoute(this.defaultPath);
+    }
 }
 
 class Route {
     constructor(path, ctrl) {
         this.path = path;
         this.ctrl = ctrl;
+        this.decomposedPath = Route.decomposedPath(path);
+    }
+
+    static decomposedPath(path) {
+        if (path === '') {
+            return [''];
+        } else {
+            try {
+                return path.match(/[^/]+/g).slice(1);
+            } catch (e) {
+                return [];
+            }
+        }
+    }
+
+    getParam (path) {
+
     }
 }
 
 class App {
-    constructor(){
+    constructor() {
         this.modules = {};
         this.router = new Router();
     }
 
-    addModule (name, module){
+    addModule(name, module) {
         this.modules[name] = module;
         document.getElementById(module.target).appendChild(module.composant);
     }
 
-    getModule (name) {
+    getModule(name) {
         return this.modules[name];
     }
-    getRouter () {
+
+    getRouter() {
         return this.router;
     }
-    run(){
+
+    run() {
         this.getRouter().route(window.location.hash);
     }
 
 }
 
 class Module {
-    constructor(target, composant){
+    constructor(target, composant) {
         this.target = target;
         this.composant = composant;
     }
@@ -151,15 +193,15 @@ class MovieElement extends HTMLElement {
         this.shadow = this.attachShadow({mode: 'open'});
         this.shadow.appendChild(this.getStyle());
         this.shadow.appendChild(this.getMovieElem(movie));
-        MovieElement.count = MovieElement.count ||  0;
-        this.setAttribute('id', "movie-"+ MovieElement.count++);
+        MovieElement.count = MovieElement.count || 0;
+        this.setAttribute('id', "movie-" + MovieElement.count++);
     }
 
     getMovieElem(movie) {
         let el = document.createElement('div');
-        let step = movie.vote_average *10;
-        let color =step > 50 ? 'green': 'red';
-        let rotate = step > 0 ? 180: 0;
+        let step = movie.vote_average * 10;
+        let color = step > 50 ? 'green' : 'red';
+        let rotate = step > 50 ? 0 : 180;
         el.innerHTML = `<a href="#/movie/${movie.id}">
                             <h2 class="title">${movie.original_title}</h2>
                             <div class="poster"><img width="200" src="http://image.tmdb.org/t/p/w185/${movie.poster_path}"/></div>
@@ -167,7 +209,7 @@ class MovieElement extends HTMLElement {
                                 <div class="chart"><chart-element data-option-scale="0.3" data-option-step="${step}"></chart-element></div>
                                 <logo-element name="popcorn" color="#ccc"></logo-element>
                                 <div class="popularity">${movie.popularity}</div>
-                                <logo-element name="like" rotate="" color="${color}"></logo-element>
+                                <logo-element name="like" rotate="${rotate}" color="${color}"></logo-element>
                             </div>
                             <div style="clear: both"></div>
                         </a>`;
@@ -256,31 +298,33 @@ class MovieElement extends HTMLElement {
         return tmpElem.firstChild;
     }
 }
+
 customElements.define('movie-element', MovieElement);
 
 
 class MovielistElement extends HTMLElement {
 
-    constructor(){
-        super ();
+    constructor() {
+        super();
         this.shadow = this.attachShadow({mode: 'open'});
-        MovielistElement.count = MovieElement.count ||  0;
-        this.setAttribute('id', "movielist-"+ MovielistElement.count++);
+        MovielistElement.count = MovieElement.count || 0;
+        this.setAttribute('id', "movielist-" + MovielistElement.count++);
     }
 
-    update (callback){
+    update(callback) {
         let _this = this;
-        callback.then( (response) =>  {
-            response.json().then( (data) => {
+        callback.then((response) => {
+            response.json().then((data) => {
                 let results = data.results;
                 this.shadow.appendChild(this.getStyle());
                 this.shadow.appendChild(this.getNavigation(data));
-                for (let i = 0; i< results.length; i++){
+                for (let i = 0; i < results.length; i++) {
                     this.shadow.appendChild(new MovieElement(results[i]));
                 }
             })
         });
     }
+
     getStyle() {
         let tmpElem = document.createElement('div');
         tmpElem.innerHTML =
@@ -331,20 +375,24 @@ class MovielistElement extends HTMLElement {
     }
 
 }
+
 customElements.define('movielist-element', MovielistElement);
 
 class ChartElement extends HTMLElement {
 
     // Idée prise de https://codepen.io/kunalkamble/pen/XXbWwN
 
-    constructor(options){
-        super ();
-        options = options || {scale: this.getAttribute('data-option-scale'), step:this.getAttribute('data-option-step')}
+    constructor(options) {
+        super();
+        options = options || {
+            scale: this.getAttribute('data-option-scale'),
+            step: this.getAttribute('data-option-step')
+        }
         this.shadow = this.attachShadow({mode: 'open'});
         this.shadow.appendChild(this.getStyle(options));
         this.shadow.appendChild(this.getChartElem());
-        ChartElement.count = ChartElement.count ||  0;
-        this.setAttribute('id', "chart-"+ ChartElement.count++);
+        ChartElement.count = ChartElement.count || 0;
+        this.setAttribute('id', "chart-" + ChartElement.count++);
     }
 
     getChartElem() {
@@ -371,9 +419,9 @@ class ChartElement extends HTMLElement {
         let frame = -250 * pourcent;
         let time = 3 * pourcent;
         let contentAfter = "";
-        let dimensionWidth = options.scale * 100 *2;
-        let dimensionHeight = options.scale * 100 *2.7;
-        let position = (1 -  options.scale ) * 100;
+        let dimensionWidth = options.scale * 100 * 2;
+        let dimensionHeight = options.scale * 100 * 2.7;
+        let position = (1 - options.scale) * 100;
 
         let tmpElem = document.createElement('div');
         tmpElem.innerHTML = `<style type="text/css">
@@ -479,15 +527,18 @@ class ChartElement extends HTMLElement {
 class LogoElement extends HTMLElement {
     constructor() {
         super();
-        if(!iconSvg[this.getAttribute('name')]) return;
+        if (!iconSvg[this.getAttribute('name')]) return;
 
         let icon = this.getIconElem(this.getAttribute('name'));
         this.shadow = this.attachShadow({mode: 'open'});
-        this.shadow.appendChild(this.getStyle( {color: this.getAttribute('color') || 'white', rotate :  this.getAttribute('rotate') || 0}));
+        this.shadow.appendChild(this.getStyle({
+            color: this.getAttribute('color') || 'white',
+            rotate: this.getAttribute('rotate') || 0
+        }));
         this.shadow.appendChild(icon);
 
-        LogoElement.count = LogoElement.count ||  0;
-        this.setAttribute('id', "logo-"+ LogoElement.count++);
+        LogoElement.count = LogoElement.count || 0;
+        this.setAttribute('id', "logo-" + LogoElement.count++);
     }
 
     getIconElem(name) {
@@ -510,32 +561,39 @@ class LogoElement extends HTMLElement {
         return tmpElem.firstChild;
     }
 }
+
 customElements.define('logo-element', LogoElement);
 customElements.define('chart-element', ChartElement);
 
 
-
-
-let app = new App();
+const app = new App();
 app.addModule('movieList', new Module('movielist-container', new MovielistElement()));
 
 app.getRouter().addRoute(new Route('', () => {
     app.getModule('movieList').composant.update(
-        (()=> {
-            app.getRouter().setPathNoPage('#/tranding/');
+        (() => {
+            app.getRouter().setBasePath('#/tranding/');
             return movieService.getTrending();
         })());
 }))
-    .addRoute(new Route('#/12', () => {
-    app.getModule('movieList').composant.update(
-        (()=> {
-            app.getRouter().setPathNoPage('#/tranding/');
-            return movieService.getTrending();
-        })());
-}));
-
+    .addRoute(new Route('#/12/allo', () => {
+        app.getModule('movieList').composant.update(
+            (() => {
+                app.getRouter().setBasePath('#/tranding/');
+                return movieService.getTrending();
+            })());
+    }))
+    .addRoute(new Route('#/12/{:page}', () => {
+        app.getModule('movieList').composant.update(
+            (() => {
+                console.log('#/12/{:page}');
+                app.getRouter().setBasePath('#/tranding/');
+                return movieService.getTrending();
+            })());
+    }));
 
 app.run();
+
 
 
 
