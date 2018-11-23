@@ -1,5 +1,4 @@
 const v3ApiKey = "71dddde08106498e1c93152088391560";
-const v4ApiKey = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3MWRkZGRlMDgxMDY0OThlMWM5MzE1MjA4ODM5MTU2MCIsInN1YiI6IjViZWNmOTAzYzNhMzY4MTJmMzAwY2YyMCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.0FTwqDrzXxRhHcjQnquX6gKOCt1RumxgtGMjjRSOoZA";
 const apiurl = "https://api.themoviedb.org/3/movie/550?api_key=71dddde08106498e1c93152088391560";
 //https://codepen.io/kunalkamble/pen/XXbWwN
 //https://developers.google.com/web/fundamentals/web-components/
@@ -8,6 +7,11 @@ const apiurl = "https://api.themoviedb.org/3/movie/550?api_key=71dddde08106498e1
 // https://api.themoviedb.org/3/trending/movie/week?api_key=71dddde08106498e1c93152088391560
 
 
+Array.prototype.clone = function() {
+    return this.slice(0);
+};
+
+const URL_PARAM_REGEX = /\{:(.*)\}/;
 let iconSvg = {
     popcorn: `<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 preserveAspectRatio="none" viewBox="0 0 53.029 53.029" 
@@ -67,7 +71,6 @@ let iconSvg = {
 			C19.725,29.811,19.533,29.884,19.341,29.884z"/>
 	</g>
 </g>`
-
 };
 
 let movieService = {
@@ -76,6 +79,29 @@ let movieService = {
         return await fetch("movie.json");
     }
 };
+
+class Util {
+    static applyWildcardToDecomposedPath (decomposedPath, wildcards){
+       wildcards.forEach(function (wildcard) {
+           decomposedPath[wildcard.index] = wildcard.name;
+       });
+        return decomposedPath;
+    }
+
+    static getWildcards (decomposedPath){
+        let wildcards = [];
+        decomposedPath.forEach( (value , index)=>{
+            if(URL_PARAM_REGEX.test(value)){
+                wildcards.push({
+                    index: index,
+                    name: URL_PARAM_REGEX.exec(value)[1]
+
+                });
+            }
+        });
+        return wildcards;
+    }
+}
 
 class Router {
     constructor() {
@@ -101,12 +127,9 @@ class Router {
     }
 
     route(hash) {
-        this.getRoutes().forEach(function (route) {
-            if (hash.match(new RegExp(route.path))) {
-                this.current = route;
-                route.ctrl();
-            }
-        });
+        let route = this.getRoute(hash);
+        this.current = route;
+        route.ctrl();
     }
 
     getRoute(path) {
@@ -119,8 +142,11 @@ class Router {
         let foundRoute;
 
         routes.forEach(function (route) {
-            if (decomposedPath.join('') === route.decomposedPath.join('')) {
-                foundRoute = route;
+
+            if(decomposedPath.length === route.decomposedPath.length){
+                if (Util.applyWildcardToDecomposedPath(decomposedPath.clone(), route.wildCard).join('') === Util.applyWildcardToDecomposedPath( route.decomposedPath.clone(), route.wildCard).join('')) {
+                    foundRoute = route;
+                }
             }
         });
         return foundRoute || this.getRoute(this.defaultPath);
@@ -136,6 +162,12 @@ class Route {
         this.path = path;
         this.ctrl = ctrl;
         this.decomposedPath = Route.decomposedPath(path);
+        this.wildCard = [];
+        this.setWildCard();
+    }
+
+    setWildCard () {
+        this.wildCard = Util.getWildcards(this.decomposedPath);
     }
 
     static decomposedPath(path) {
@@ -148,10 +180,6 @@ class Route {
                 return [];
             }
         }
-    }
-
-    getParam(path) {
-
     }
 }
 
@@ -373,7 +401,6 @@ class MovielistElement extends HTMLElement {
 
         return tmpElem.firstChild;
     }
-
 }
 
 customElements.define('movielist-element', MovielistElement);
@@ -387,7 +414,7 @@ class ChartElement extends HTMLElement {
         options = options || {
             scale: this.getAttribute('data-option-scale'),
             step: this.getAttribute('data-option-step')
-        }
+        };
         this.shadow = this.attachShadow({mode: 'open'});
         this.shadow.appendChild(this.getStyle(options));
         this.shadow.appendChild(this.getChartElem());
@@ -573,16 +600,10 @@ app.getRouter().addRoute(new Route('', () => {
     app.getModule('movieList').composant.update(
         (() => {
             app.getRouter().setBasePath('#/tranding/');
+            console.log('home');
             return movieService.getTrending();
         })());
 }))
-    .addRoute(new Route('#/12/allo/', () => {
-        app.getModule('movieList').composant.update(
-            (() => {
-                app.getRouter().setBasePath('#/tranding/');
-                return movieService.getTrending();
-            })());
-    }))
     .addRoute(new Route('#/tranding/{:page}', () => {
         app.getModule('movieList').composant.update(
             (() => {
@@ -591,29 +612,29 @@ app.getRouter().addRoute(new Route('', () => {
                 return movieService.getTrending();
             })());
     }))
-    .addRoute(new Route('#/search/', () => {
+    .addRoute(new Route('#/search/{:moviesearch}/', () => {
         app.getModule('movieList').composant.update(
             (() => {
-                console.log('#/search/');
+                console.log('#/search/{:moviesearch}/');
                 app.getRouter().setBasePath('#/search/');
                 return movieService.getTrending();
             })());
     }))
-    .addRoute(new Route('#/search/{:page}', () => {
+    .addRoute(new Route('#/search/{:moviesearch}/{:page}', () => {
         app.getModule('movieList').composant.update(
             (() => {
-                console.log('#/search/{:page}');
-                app.getRouter().setBasePath('#/search/');
+                console.log('#/search/{:moviesearch}/{:page}');
+                app.getRouter().setBasePath('#/search/{:moviesearch}/');
                 return movieService.getTrending();
             })())
-            .addRoute(new Route('#/movie/', () => {
-                app.getModule('movieList').composant.update(
-                    (() => {
-                        console.log('#/movie/');
-                        app.getRouter().setBasePath('#/movie/');
-                        return movieService.getTrending();
-                    })());
-            }))
+    }))
+    .addRoute(new Route('#/movie/{:movieid}', () => {
+        app.getModule('movieList').composant.update(
+            (() => {
+                console.log('#/movie/{:movieid}');
+                app.getRouter().setBasePath('#/movie/');
+                return movieService.getTrending();
+            })());
     }));
 
 app.run();
