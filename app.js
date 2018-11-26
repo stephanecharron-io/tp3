@@ -644,9 +644,14 @@ class FooterElement extends HTMLElement {
     constructor (){
         super ();
         this.shadow = this.attachShadow({mode: 'open'});
-        let el = document.createElement('footer');
-        el.innerHTML = `
-            <style type="text/css">
+        this.shadow.appendChild(this.getStyle());
+        this.shadow.appendChild(this.getHtmlNode());
+    }
+
+    getStyle () {
+        let tmpElem = document.createElement('div');
+        tmpElem.innerHTML =
+            `<style type="text/css">
                 footer {
                     margin-top: -15px;
                 } 
@@ -657,15 +662,24 @@ class FooterElement extends HTMLElement {
                   2px 2px rgba(255,255,255, 0.2),
                   3px 3px rgba(255,255,255, 0.2);
                 }
-            </style>
-            `;
-        this.shadow.appendChild(el);
-
+            </style>`;
+        return tmpElem.firstChild;
     }
 
-    getHtmlNode (){
-        let el = document.createElement('footer');
-        el.innerHTML = `<h2>Trending</h2>`  ;
+    getHtmlNode (text){
+        let footer = document.createElement('footer');
+        footer.innerHTML = `<h2>${text}</h2>`  ;
+        return footer;
+    }
+
+    setH2 (text) {
+        let shadow = this.shadowRoot;
+        Array.from(shadow.childNodes).forEach((elem) =>{
+            elem.remove();
+        });
+
+        this.shadow.appendChild(this.getStyle());
+        this.shadow.appendChild(this.getHtmlNode(text));
 
     }
 }
@@ -684,17 +698,19 @@ app.addModule('footer', new Module('footer-container', new FooterElement()));
 app.router.addRoute(new Route('', () => {
     app.getModule('movieList').composant.update(
         (() => {
-            app.router.setBasePath('#/tranding/');
+            app.getModule('footer').composant.setH2('Trending - Home Page')
+            app.router.setBasePath('#/trending/');
             console.log('home');
             return movieService.getTrending();
         })());
 }))
-    .addRoute(new Route('#/tranding/{:page}', () => {
+    .addRoute(new Route('#/trending/{:page}', () => {
         app.getModule('movieList').composant.update(
             (() => {
                 let params = app.router.getUrlParams();
-                console.log('#/tranding/{:page}');
-                app.router.setBasePath('#/tranding/');
+                app.getModule('footer').composant.setH2('Trending')
+                console.log('#/trending/{:page}');
+                app.router.setBasePath('#/trending/');
                 return movieService.getTrending(params.page);
             })());
     }))
