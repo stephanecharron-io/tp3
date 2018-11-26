@@ -6,11 +6,17 @@ body {
   background-color: #222222;
   font-family: Arial,Helvetica Neue,Helvetica,sans-serif; }
   body header {
+    position: relative;
     height: 70px;
     margin-bottom: 20px;
     background-color: #111111;
     border-bottom: 3px solid rgba(255, 255, 255, 0.2);
     text-align: center; }
+    body header logo-element[name="home"] {
+      position: absolute;
+      width: 30px;
+      left: 30px;
+      top: 23px; }
     body header input {
       width: 50%;
       height: 30px;
@@ -30,10 +36,12 @@ body {
     border-top: 3px solid rgba(255, 255, 255, 0.2); }
   body h1 {
     text-align: center;
-    color: white;
     margin-bottom: 20px;
     font-size: 40px;
     text-shadow: 2px 2px rgba(255, 255, 255, 0.2), 3px 3px rgba(255, 255, 255, 0.2), 4px 4px rgba(255, 255, 255, 0.2); }
+    body h1 a {
+      color: white;
+      text-decoration: none; }
   body #movielist-container {
     padding: 20px; }
   body #movielist-container {
