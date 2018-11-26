@@ -76,7 +76,7 @@ let iconSvg = {
 let movieService = {
     v3ApiKey: "71dddde08106498e1c93152088391560",
     getTrending: async (page) => {
-        page = page || 1
+        page = page || 1;
         return await fetch(`https://api.themoviedb.org/3/trending/movie/week?api_key=${movieService.v3ApiKey}&page=${page}`);
         //return await fetch("movie.json");
     }
@@ -145,7 +145,7 @@ class Router {
 
         routes.forEach(function (route) {
             if(decomposedPath.length === route.decomposedPath.length){
-                if (Util.applyWildcardToDecomposedPath(decomposedPath.clone(), route.wildCard).join('') === Util.applyWildcardToDecomposedPath( route.decomposedPath.clone(), route.wildCard).join('')) {
+                if (Util.applyWildcardToDecomposedPath(decomposedPath.clone(), route.wildcards).join('') === Util.applyWildcardToDecomposedPath( route.decomposedPath.clone(), route.wildcards).join('')) {
                     foundRoute = route;
                 }
             }
@@ -157,7 +157,7 @@ class Router {
     getUrlParams (){
         let params = {};
         let route = this.current;
-        let wildcars = route.wildCard;
+        let wildcars = route.wildcards;
         let decomposedPath = Route.decomposedPath(window.location.hash);
 
         wildcars.forEach((wildcard)=>{
@@ -173,12 +173,12 @@ class Route {
         this.path = path;
         this.ctrl = ctrl;
         this.decomposedPath = Route.decomposedPath(path);
-        this.wildCard = [];
+        this.wildcards = [];
         this.setWildCard();
     }
 
     setWildCard () {
-        this.wildCard = Util.getWildcards(this.decomposedPath);
+        this.wildcards = Util.getWildcards(this.decomposedPath);
     }
 
     static decomposedPath(path) {
@@ -329,14 +329,12 @@ class MovieElement extends HTMLElement {
                 .chart {
                     margin-left: 43px;
                 }
-                
             </style>`;
 
         return tmpElem.firstChild;
     }
 }
 
-customElements.define('movie-element', MovieElement);
 
 
 class MovielistElement extends HTMLElement {
@@ -459,8 +457,6 @@ class MovielistElement extends HTMLElement {
         return tmpElem.firstChild;
     }
 }
-
-customElements.define('movielist-element', MovielistElement);
 
 class ChartElement extends HTMLElement {
 
@@ -677,6 +673,8 @@ class FooterElement extends HTMLElement {
 customElements.define('footer-element', FooterElement);
 customElements.define('logo-element', LogoElement);
 customElements.define('chart-element', ChartElement);
+customElements.define('movie-element', MovieElement);
+customElements.define('movielist-element', MovielistElement);
 
 const app = new App();
 app.addModule('movieList', new Module('movielist-container', new MovielistElement()));
