@@ -111,7 +111,7 @@ class Router {
         this.defaultPath = "";
         this.current= '';
         window.addEventListener("hashchange", function (data) {
-            app.getRouter().route(window.location.hash);
+            app.router.route(window.location.hash);
         }, false);
     }
 
@@ -122,10 +122,6 @@ class Router {
 
     setBasePath(pathNoPage) {
         this.pathNoPage = pathNoPage;
-    }
-
-    getRoutes() {
-        return this.routes;
     }
 
     route(hash) {
@@ -144,17 +140,17 @@ class Router {
             return this.getRoute(this.defaultPath);
         }
 
-        let routes = this.getRoutes();
+        let routes = this.routes;
         let foundRoute;
 
         routes.forEach(function (route) {
-
             if(decomposedPath.length === route.decomposedPath.length){
                 if (Util.applyWildcardToDecomposedPath(decomposedPath.clone(), route.wildCard).join('') === Util.applyWildcardToDecomposedPath( route.decomposedPath.clone(), route.wildCard).join('')) {
                     foundRoute = route;
                 }
             }
         });
+
         return foundRoute || this.getRoute(this.defaultPath);
     }
 
@@ -213,12 +209,8 @@ class App {
         return this.modules[name];
     }
 
-    getRouter() {
-        return this.router;
-    }
-
     run() {
-        this.getRouter().route(window.location.hash);
+        this.router.route(window.location.hash);
     }
 
 }
@@ -236,12 +228,12 @@ class MovieElement extends HTMLElement {
         super();
         this.shadow = this.attachShadow({mode: 'open'});
         this.shadow.appendChild(this.getStyle());
-        this.shadow.appendChild(this.getMovieElem(movie));
+        this.shadow.appendChild(this.getHtmlNode(movie));
         MovieElement.count = MovieElement.count || 0;
         this.setAttribute('id', "movie-" + MovieElement.count++);
     }
 
-    getMovieElem(movie) {
+    getHtmlNode(movie) {
         let el = document.createElement('div');
         let step = movie.vote_average * 10;
         let color = step > 50 ? 'green' : 'red';
@@ -360,7 +352,7 @@ class MovielistElement extends HTMLElement {
         callback.then((response) => {
 
             if(!response.ok) {
-                app.getRouter().routeDefault();
+                app.router.routeDefault();
                 return;
             }
             response.json().then((data) => {
@@ -436,7 +428,7 @@ class MovielistElement extends HTMLElement {
 
         let hrefDown  = (() => {
             if (data.page > 1 && data.total_pages > 1){
-                return `href="${app.getRouter().pathNoPage}${data.page -1}"`;
+                return `href="${app.router.pathNoPage}${data.page -1}"`;
             } else {
                 arrowLeftColor = disableColor;
                 return "disable";
@@ -445,7 +437,7 @@ class MovielistElement extends HTMLElement {
 
         let hrefUp = (() => {
             if (data.page <  data.total_pages){
-                return `href="${app.getRouter().pathNoPage}${data.page +1}"`;
+                return `href="${app.router.pathNoPage}${data.page +1}"`;
             } else {
                 arrowRightColor = disableColor;
                 return "disable";
@@ -482,12 +474,12 @@ class ChartElement extends HTMLElement {
         };
         this.shadow = this.attachShadow({mode: 'open'});
         this.shadow.appendChild(this.getStyle(options));
-        this.shadow.appendChild(this.getChartElem());
+        this.shadow.appendChild(this.getHtmlNode());
         ChartElement.count = ChartElement.count || 0;
         this.setAttribute('id', "chart-" + ChartElement.count++);
     }
 
-    getChartElem() {
+    getHtmlNode() {
         let el = document.createElement('div');
         el.innerHTML = `<div class="figureWrap">
                             <figure class="chart-two animate">
@@ -619,7 +611,7 @@ class LogoElement extends HTMLElement {
         super();
         if (!iconSvg[this.getAttribute('name')]) return;
 
-        let icon = this.getIconElem(this.getAttribute('name'));
+        let icon = this.getHtmlNode(this.getAttribute('name'));
         this.shadow = this.attachShadow({mode: 'open'});
         this.shadow.appendChild(this.getStyle({
             color: this.getAttribute('color') || 'white',
@@ -631,7 +623,7 @@ class LogoElement extends HTMLElement {
         this.setAttribute('id', "logo-" + LogoElement.count++);
     }
 
-    getIconElem(name) {
+    getHtmlNode(name) {
         let el = document.createElement('div');
         el.innerHTML = iconSvg[name];
         return el.firstChild;
@@ -675,7 +667,7 @@ class FooterElement extends HTMLElement {
 
     }
 
-    getStyle (){
+    getHtmlNode (){
         let el = document.createElement('footer');
         el.innerHTML = `<h2>Trending</h2>`  ;
 
@@ -691,10 +683,10 @@ app.addModule('movieList', new Module('movielist-container', new MovielistElemen
 app.addModule('footer', new Module('footer-container', new FooterElement()));
 
 
-app.getRouter().addRoute(new Route('', () => {
+app.router.addRoute(new Route('', () => {
     app.getModule('movieList').composant.update(
         (() => {
-            app.getRouter().setBasePath('#/tranding/');
+            app.router.setBasePath('#/tranding/');
             console.log('home');
             return movieService.getTrending();
         })());
@@ -702,9 +694,9 @@ app.getRouter().addRoute(new Route('', () => {
     .addRoute(new Route('#/tranding/{:page}', () => {
         app.getModule('movieList').composant.update(
             (() => {
-                let params = app.getRouter().getUrlParams();
+                let params = app.router.getUrlParams();
                 console.log('#/tranding/{:page}');
-                app.getRouter().setBasePath('#/tranding/');
+                app.router.setBasePath('#/tranding/');
                 return movieService.getTrending(params.page);
             })());
     }))
@@ -712,7 +704,7 @@ app.getRouter().addRoute(new Route('', () => {
         app.getModule('movieList').composant.update(
             (() => {
                 console.log('#/search/{:moviesearch}/');
-                app.getRouter().setBasePath('#/search/');
+                app.router.setBasePath('#/search/');
                 return movieService.getTrending();
             })());
     }))
@@ -720,7 +712,7 @@ app.getRouter().addRoute(new Route('', () => {
         app.getModule('movieList').composant.update(
             (() => {
                 console.log('#/search/{:moviesearch}/{:page}');
-                app.getRouter().setBasePath('#/search/{:moviesearch}/');
+                app.router.setBasePath('#/search/{:moviesearch}/');
                 return movieService.getTrending();
             })())
     }))
@@ -728,7 +720,7 @@ app.getRouter().addRoute(new Route('', () => {
         app.getModule('movieList').composant.update(
             (() => {
                 console.log('#/movie/{:movieid}');
-                app.getRouter().setBasePath('#/movie/');
+                app.router.setBasePath('#/movie/');
                 return movieService.getTrending();
             })());
     }));
