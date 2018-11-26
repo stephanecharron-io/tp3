@@ -75,8 +75,10 @@ let iconSvg = {
 
 let movieService = {
     v3ApiKey: "71dddde08106498e1c93152088391560",
-    getTrending: async () => {
-        return await fetch("movie.json");
+    getTrending: async (page) => {
+        page = page || 1
+        return await fetch(`https://api.themoviedb.org/3/trending/movie/week?api_key=${movieService.v3ApiKey}&page=${page}`);
+        //return await fetch("movie.json");
     }
 };
 
@@ -132,6 +134,10 @@ class Router {
         route.ctrl();
     }
 
+    routeDefault () {
+        window.location.hash = this.defaultPath;
+    }
+
     getRoute(path) {
         let decomposedPath = Route.decomposedPath(path);
         if (!decomposedPath.length) {
@@ -153,7 +159,16 @@ class Router {
     }
 
     getUrlParams (){
-        return {};
+        let params = {};
+        let route = this.current;
+        let wildcars = route.wildCard;
+        let decomposedPath = Route.decomposedPath(window.location.hash);
+
+        wildcars.forEach((wildcard)=>{
+            params[wildcard.name] = decomposedPath[wildcard.index];
+        });
+
+        return params;
     }
 }
 
@@ -309,6 +324,7 @@ class MovieElement extends HTMLElement {
                     border: 1px solid #666666;
                     border-radius: 3px;
                     width: 350px;
+                    height: 424px;
                     float: left;
                     margin-left: 5px;
                     margin-right: 5px;
@@ -342,13 +358,27 @@ class MovielistElement extends HTMLElement {
 
     update(callback) {
         callback.then((response) => {
+
+            if(!response.ok) {
+                app.getRouter().routeDefault();
+                return;
+            }
             response.json().then((data) => {
                 let results = data.results;
+
+                let shadow = this.shadowRoot;
+                Array.from(shadow.childNodes).forEach((elem) =>{
+                    elem.remove();
+                });
+
                 this.shadow.appendChild(this.getStyle());
                 this.shadow.appendChild(this.getNavigation(data));
                 for (let i = 0; i < results.length; i++) {
                     this.shadow.appendChild(new MovieElement(results[i]));
                 }
+                let tmpElem = document.createElement('div');
+                tmpElem.innerHTML = "<div class='bottom'></div>"
+                this.shadow.appendChild(tmpElem.firstChild);
             })
         });
     }
@@ -362,7 +392,9 @@ class MovielistElement extends HTMLElement {
                     color: white;
                     font-size:24px;
                     font-weight: bold;
-                    margin-bottom: 10px;
+                    margin-bottom: 30px;
+                    position: relative;
+                    padding-left: 22px;
                 }
                 logo-element[name="arrow"] {
                     display: block;
@@ -372,14 +404,24 @@ class MovielistElement extends HTMLElement {
                     display: inline-block;
                 }
                 .left {
-                    margin-right: 20px;
+                    position: absolute;
+                    left: -60px;
+                    top:-5px
                 }
                 .right {
-                    margin-left: 20px;
+                    right: -60px;
+                    position: absolute;
+                    top:-5px
+
                 }
                 span {
-                    line-height: 40px;
-                }
+                    position: relative;
+                }  
+                .bottom {
+                    height: 30px;
+                    width: 100%;
+                    clear: both;
+                }       
               
             </style>`;
 
@@ -387,16 +429,39 @@ class MovielistElement extends HTMLElement {
     }
 
     getNavigation(data) {
+
+        let arrowLeftColor = 'yellow';
+        let arrowRightColor = 'yellow';
+        let disableColor = '#444444';
+
+        let hrefDown  = (() => {
+            if (data.page > 1 && data.total_pages > 1){
+                return `href="${app.getRouter().pathNoPage}${data.page -1}"`;
+            } else {
+                arrowLeftColor = disableColor;
+                return "disable";
+            }
+        })();
+
+        let hrefUp = (() => {
+            if (data.page <  data.total_pages){
+                return `href="${app.getRouter().pathNoPage}${data.page +1}"`;
+            } else {
+                arrowRightColor = disableColor;
+                return "disable";
+            }
+        })();;
+
         let tmpElem = document.createElement('div');
         tmpElem.innerHTML =
             `<div class="navigation">
-                <a href="#/page/left" class="logoWrap">
-                    <logo-element rotate="180" class="left" name="arrow" color="yellow" ></logo-element>
+                <span><a ${hrefDown} class="logoWrap">
+                    <logo-element rotate="180" class="left" name="arrow" color="${arrowLeftColor}" ></logo-element>
                  </a> 
                     page ${data.page} of ${data.total_pages}
-                <a href="#/page/right" class="logoWrap">
-                    <logo-element rotate="0" class="right" name="arrow" color="yellow" ></logo-element>
-                 </a>     
+                <a ${hrefUp} class="logoWrap">
+                    <logo-element rotate="0" class="right" name="arrow" color="${arrowRightColor}" ></logo-element>
+                 </a>    </span> 
              </div>`;
 
         return tmpElem.firstChild;
@@ -407,7 +472,7 @@ customElements.define('movielist-element', MovielistElement);
 
 class ChartElement extends HTMLElement {
 
-    // Idée prise de https://codepen.io/kunalkamble/pen/XXbWwN
+    //  pris de https://codepen.io/kunalkamble/pen/XXbWwN
 
     constructor(options) {
         super();
@@ -441,11 +506,10 @@ class ChartElement extends HTMLElement {
 
         let pourcent = options.step / 100;
 
-        let step = 100 * pourcent;
+        let step = Math.round(100 * pourcent);
         let stroke = 580.9 * pourcent;
         let frame = -250 * pourcent;
-        let time = 3 * pourcent;
-        let contentAfter = "";
+        let time = 1 * pourcent;
         let dimensionWidth = options.scale * 100 * 2;
         let dimensionHeight = options.scale * 100 * 2.7;
         let position = (1 - options.scale) * 100;
@@ -548,7 +612,6 @@ class ChartElement extends HTMLElement {
 
         return tmpElem.firstChild;
     }
-
 }
 
 class LogoElement extends HTMLElement {
@@ -589,12 +652,44 @@ class LogoElement extends HTMLElement {
     }
 }
 
+class FooterElement extends HTMLElement {
+    constructor (){
+        super ();
+        this.shadow = this.attachShadow({mode: 'open'});
+        let el = document.createElement('footer');
+        el.innerHTML = `
+            <style type="text/css">
+                footer {
+                    margin-top: -15px;
+                } 
+                h2 {
+                  text-align: center;
+                  color: #cccccc;
+                  text-shadow: 1px 1px rgba(255,255,255, 0.2),
+                  2px 2px rgba(255,255,255, 0.2),
+                  3px 3px rgba(255,255,255, 0.2);
+                }
+            </style>
+            `;
+        this.shadow.appendChild(el);
+
+    }
+
+    getStyle (){
+        let el = document.createElement('footer');
+        el.innerHTML = `<h2>Trending</h2>`  ;
+
+    }
+}
+
+customElements.define('footer-element', FooterElement);
 customElements.define('logo-element', LogoElement);
 customElements.define('chart-element', ChartElement);
 
-
 const app = new App();
 app.addModule('movieList', new Module('movielist-container', new MovielistElement()));
+app.addModule('footer', new Module('footer-container', new FooterElement()));
+
 
 app.getRouter().addRoute(new Route('', () => {
     app.getModule('movieList').composant.update(
@@ -607,9 +702,10 @@ app.getRouter().addRoute(new Route('', () => {
     .addRoute(new Route('#/tranding/{:page}', () => {
         app.getModule('movieList').composant.update(
             (() => {
+                let params = app.getRouter().getUrlParams();
                 console.log('#/tranding/{:page}');
                 app.getRouter().setBasePath('#/tranding/');
-                return movieService.getTrending();
+                return movieService.getTrending(params.page);
             })());
     }))
     .addRoute(new Route('#/search/{:moviesearch}/', () => {
