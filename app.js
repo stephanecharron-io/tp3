@@ -1,11 +1,3 @@
-const v3ApiKey = "71dddde08106498e1c93152088391560";
-const apiurl = "https://api.themoviedb.org/3/movie/550?api_key=71dddde08106498e1c93152088391560";
-//https://codepen.io/kunalkamble/pen/XXbWwN
-//https://developers.google.com/web/fundamentals/web-components/
-//http://image.tmdb.org/t/p/w185/nBNZadXqJSdt05SHLqgT0HuC5Gm.jpg
-// https://api.themoviedb.org/3/trending/movie/week?api_key=71dddde08106498e1c93152088391560
-
-
 Array.prototype.clone = function() {
     return this.slice(0);
 };
@@ -90,36 +82,6 @@ let ICONS_SVG = {
 			C455.549,238.499,449.593,232.543,442.246,232.543z"/>
 	</g>
 </g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
 </svg>`
 };
 
@@ -128,12 +90,18 @@ const notAvailableImg = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAZABkAAD/7AAR
 const movieService = {
     v3ApiKey: '71dddde08106498e1c93152088391560',
     baseUrl: 'https://api.themoviedb.org/3',
-    getTrending: async (page) => {
-        return await fetch(`${movieService.baseUrl}/trending/movie/day?api_key=${movieService.v3ApiKey}&page=${page || 1}`);
+    getTrending:  (page) => {
+        return  fetch(`${movieService.baseUrl}/trending/movie/day?api_key=${movieService.v3ApiKey}&page=${page || 1}`);
         //return await fetch("movie.json");
     },
-    search : async (searchString, page) => {
-        return await fetch(`${movieService.baseUrl}/search/movie?api_key=${movieService.v3ApiKey}&language=en-US&query=${searchString}&page=${page || 1}&include_adult=false`);
+    search :  (searchString, page) => {
+        return  fetch(`${movieService.baseUrl}/search/movie?api_key=${movieService.v3ApiKey}&language=en-US&query=${searchString}&page=${page || 1}&include_adult=false`);
+    },
+    getMovie : (movieId) => {
+        return fetch(`${movieService.baseUrl}/movie/${movieId}?api_key=71dddde08106498e1c93152088391560`);
+    },
+    getReviews : (movieId) => {
+        return fetch(`${movieService.baseUrl}/movie/${movieId}?api_key=${movieService.v3ApiKey}&language=en-US&page=1`);
     }
 };
 
@@ -291,9 +259,9 @@ class MovieElement extends HTMLElement {
     getHtmlNode(movie) {
         let el = document.createElement('div');
         let step = movie.vote_average * 10;
-        let color = step > 50 ? 'green' : 'red';
+        let color = step > 75 ? 'green' : (()=> {return step > 50 ? 'orange':'red'})();
         let rotate = step > 50 ? 0 : 180;
-        let posterUrl = movie.poster_path ? `http://image.tmdb.org/t/p/w185/${movie.poster_path}` : notAvailableImg;
+        let posterUrl = movie.poster_path ? `http://image.tmdb.org/t/p/w185${movie.poster_path}` : notAvailableImg;
         el.innerHTML = `<a href="#/movie/${movie.id}">
                             <h2 class="title">${movie.original_title}</h2>
                             <div class="poster"><img width="200" height="303" src="${posterUrl}"/></div>
@@ -405,7 +373,7 @@ class MovielistElement extends HTMLElement {
         this.setAttribute('id', "movielist-" + MovielistElement.count++);
     }
 
-    update(callback) {
+    updateWithList(callback) {
         callback.then((response) => {
 
             if(!response.ok) {
@@ -436,6 +404,31 @@ class MovielistElement extends HTMLElement {
                 this.shadow.appendChild(tmpElem.firstChild);
             })
         });
+    }
+
+    updateWithMovieDetails (callback) {
+        callback.then((response) => {
+
+            if(!response.ok) {
+                app.router.routeDefault();
+                return;
+            }
+            response.json().then((data) => {
+
+                let tmpElem = document.createElement('div');
+
+                let shadow = this.shadowRoot;
+                Array.from(shadow.childNodes).forEach((elem) =>{
+                    elem.remove();
+                });
+
+                localStorage.setItem(data.id, JSON.stringify(data));
+                tmpElem.innerHTML = `<movie-details-element data-movie='${data.id}'></movie-details-element><div class='bottom'></div>`;
+                this.shadow.appendChild(tmpElem.firstChild);
+            })
+        });
+
+
     }
 
     getStyle() {
@@ -800,17 +793,140 @@ class SearchElement extends HTMLElement {
     }
 }
 
+class MovieDetailsElement extends HTMLElement {
+    constructor (){
+        super ();
+        this.shadow = this.attachShadow({mode: 'open'});
+        this.shadow.appendChild(this.getStyle());
+        this.shadow.appendChild(this.getHtmlNode(JSON.parse(localStorage.getItem(this.getAttribute('data-movie')))));
+        localStorage.removeItem(this.getAttribute('data-movie'));
+    }
+
+    getStyle () {
+        let tmpElem = document.createElement('div');
+        tmpElem.innerHTML =
+            `<style type="text/css">
+                :host {
+                    display: block;
+                    width: 1000px;
+                    margin: auto;
+                }
+                
+                p {
+                    font-size: 17px;
+                }
+                
+                .description {
+                    padding-left: 10px;
+                    width: 65%;
+                    float: right;
+                    color: white;
+                }
+                .description h2 {
+                    font-size: 30px;
+                    padding-bottom: 30px;
+                }
+                
+                logo-element[name='popcorn']{
+                    display: block;
+                    width: 55px;  
+                    margin-left: 12px;
+                } 
+                
+                logo-element[name='like']{
+                    display: block;
+                    width: 50px; 
+                    margin-left: 15px;
+                    margin-top: 10px; 
+                } 
+               
+                
+                .popularity {
+                    color: white;
+                    text-align: center;
+                    font-size: 12px;
+                    padding-top: 10px;
+                }
+                
+                .description .overview {
+                    color: #aaaaaa;
+                    font-weight: bold;
+                    clear: both;
+                    padding-top: 40px;
+                }
+                
+                .poster {
+                    width: 32%;
+                    padding-right: 10px;
+                    float: left;                  
+                }
+                .poster img{
+                    width: 100%;
+                    float:left;
+                    border-radius: 5px;
+                    border-right: 3px solid rgba(255,255,255, 0.3);
+                    border-bottom: 3px solid rgba(255,255,255, 0.2);                
+                }
+                
+                .chart {
+                    float: left;                
+               
+                }
+                .popularityWrap {
+                    float: left;
+                    width: 80px;
+                    height: 80px;
+                    margin-left: 20px;    
+                }
+                .likeWrap {
+                   float: left;
+                   width: 80px;
+                   height: 80px;
+                   margin-left: 20px;
+                }
+                
+            </style>`;
+        return tmpElem.firstChild;
+    }
+
+    getHtmlNode (movie){
+
+        let step = movie.vote_average * 10;
+        let color = step > 75 ? 'green' : (()=> {return step > 50 ? 'orange':'red'})();
+        let rotate = step > 50 ? 0 : 180;
+
+        let tmpElem = document.createElement('div');
+        let posterUrl = movie.poster_path ? `http://image.tmdb.org/t/p/w780${movie.poster_path}` : notAvailableImg;
+
+        tmpElem.innerHTML =
+            `<div class="wrap">
+                <div class="poster">
+                    <img src="${posterUrl}" />
+                </div>
+                <div class="description">
+                    <h2>${movie.original_title}</h2>
+                    <div class="rating">
+                        <div class="chart"><chart-element data-option-scale="0.3" data-option-step="${step}"></chart-element></div>
+                        <div class="popularityWrap"><logo-element name="popcorn" color="#ccc"></logo-element><div class="popularity">${movie.popularity}</div></div>
+                        <div class="likeWrap"><logo-element name="like" rotate="${rotate}" color="${color}"></logo-element></div>
+                     </div>
+                    <p class="overview">Overview</p>
+                    <p>${movie.overview}</p>
+                </div>
+            </div>`;
+
+        return tmpElem.firstChild;
+    }
+}
+
+
 customElements.define('footer-element', FooterElement);
 customElements.define('logo-element', LogoElement);
 customElements.define('chart-element', ChartElement);
 customElements.define('movie-element', MovieElement);
 customElements.define('movielist-element', MovielistElement);
 customElements.define('search-element', SearchElement);
-
-
-
-
-
+customElements.define('movie-details-element', MovieDetailsElement);
 
 
 const app = new App();
@@ -821,7 +937,7 @@ app.addModule('search', new Module('header', new SearchElement()));
 
 
 app.router.addRoute(new Route('', () => {
-    app.getModule('movieList').composant.update(
+    app.getModule('movieList').composant.updateWithList(
         (() => {
             app.getModule('footer').composant.setH2('Trending - Home Page');
             app.router.setBasePath('#/trending/');
@@ -830,7 +946,7 @@ app.router.addRoute(new Route('', () => {
         })());
 }))
     .addRoute(new Route('#/trending/{:page}', () => {
-        app.getModule('movieList').composant.update(
+        app.getModule('movieList').composant.updateWithList(
             (() => {
                 let params = app.router.getUrlParams();
                 app.getModule('footer').composant.setH2('Trending');
@@ -840,7 +956,7 @@ app.router.addRoute(new Route('', () => {
             })());
     }))
     .addRoute(new Route('#/search/{:moviesearch}/', () => {
-        app.getModule('movieList').composant.update(
+        app.getModule('movieList').composant.updateWithList(
             (() => {
                 let params = app.router.getUrlParams();
                 app.getModule('footer').composant.setH2(`Search : ${decodeURI(params.moviesearch)}`);
@@ -850,7 +966,7 @@ app.router.addRoute(new Route('', () => {
             })());
     }))
     .addRoute(new Route('#/search/{:moviesearch}/{:page}', () => {
-        app.getModule('movieList').composant.update(
+        app.getModule('movieList').composant.updateWithList(
             (() => {
                 console.log('#/search/{:moviesearch}/{:page}');
                 let params = app.router.getUrlParams();
@@ -860,11 +976,12 @@ app.router.addRoute(new Route('', () => {
             })())
     }))
     .addRoute(new Route('#/movie/{:movieid}', () => {
-        app.getModule('movieList').composant.update(
+        app.getModule('movieList').composant.updateWithMovieDetails (
             (() => {
+                let params = app.router.getUrlParams();
+                app.getModule('footer').composant.setH2("Movie Details");
                 console.log('#/movie/{:movieid}');
-                app.router.setBasePath('#/movie/');
-                return movieService.getTrending();
+                return movieService.getMovie(params.movieid);
             })());
     }));
 
