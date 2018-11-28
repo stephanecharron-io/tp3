@@ -1,4 +1,4 @@
-Array.prototype.clone = function() {
+Array.prototype.clone = function () {
     return this.slice(0);
 };
 
@@ -90,33 +90,32 @@ const notAvailableImg = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAZABkAAD/7AAR
 const movieService = {
     v3ApiKey: '71dddde08106498e1c93152088391560',
     baseUrl: 'https://api.themoviedb.org/3',
-    getTrending:  (page) => {
-        return  fetch(`${movieService.baseUrl}/trending/movie/day?api_key=${movieService.v3ApiKey}&page=${page || 1}`);
-        //return await fetch("movie.json");
+    getTrending: (page) => {
+        return fetch(`${movieService.baseUrl}/trending/movie/day?api_key=${movieService.v3ApiKey}&page=${page || 1}`);
     },
-    search :  (searchString, page) => {
-        return  fetch(`${movieService.baseUrl}/search/movie?api_key=${movieService.v3ApiKey}&language=en-US&query=${searchString}&page=${page || 1}&include_adult=false`);
+    search: (searchString, page) => {
+        return fetch(`${movieService.baseUrl}/search/movie?api_key=${movieService.v3ApiKey}&language=en-US&query=${searchString}&page=${page || 1}&include_adult=false`);
     },
-    getMovie : (movieId) => {
+    getMovie: (movieId) => {
         return fetch(`${movieService.baseUrl}/movie/${movieId}?api_key=71dddde08106498e1c93152088391560`);
     },
-    getReviews : (movieId) => {
-        return fetch(`${movieService.baseUrl}/movie/${movieId}?api_key=${movieService.v3ApiKey}&language=en-US&page=1`);
+    getReviews: (movieId) => {
+        return fetch(`${movieService.baseUrl}/movie/${movieId}/reviews?api_key=${movieService.v3ApiKey}`);
     }
 };
 
 class Util {
-    static applyWildcardToDecomposedPath (decomposedPath, wildcards){
-       wildcards.forEach(function (wildcard) {
-           decomposedPath[wildcard.index] = wildcard.name;
-       });
+    static applyWildcardToDecomposedPath(decomposedPath, wildcards) {
+        wildcards.forEach(function (wildcard) {
+            decomposedPath[wildcard.index] = wildcard.name;
+        });
         return decomposedPath;
     }
 
-    static getWildcards (decomposedPath){
+    static getWildcards(decomposedPath) {
         let wildcards = [];
-        decomposedPath.forEach( (value , index)=>{
-            if(URL_PARAM_REGEX.test(value)){
+        decomposedPath.forEach((value, index) => {
+            if (URL_PARAM_REGEX.test(value)) {
                 wildcards.push({
                     index: index,
                     name: URL_PARAM_REGEX.exec(value)[1]
@@ -132,7 +131,7 @@ class Router {
     constructor() {
         this.routes = [];
         this.defaultPath = "";
-        this.current= '';
+        this.current = '';
         window.addEventListener("hashchange", function (data) {
             app.router.route(window.location.hash);
         }, false);
@@ -153,7 +152,7 @@ class Router {
         route.ctrl();
     }
 
-    routeDefault () {
+    routeDefault() {
         window.location.hash = this.defaultPath;
     }
 
@@ -167,8 +166,8 @@ class Router {
         let foundRoute;
 
         routes.forEach(function (route) {
-            if(decomposedPath.length === route.decomposedPath.length){
-                if (Util.applyWildcardToDecomposedPath(decomposedPath.clone(), route.wildcards).join('') === Util.applyWildcardToDecomposedPath( route.decomposedPath.clone(), route.wildcards).join('')) {
+            if (decomposedPath.length === route.decomposedPath.length) {
+                if (Util.applyWildcardToDecomposedPath(decomposedPath.clone(), route.wildcards).join('') === Util.applyWildcardToDecomposedPath(route.decomposedPath.clone(), route.wildcards).join('')) {
                     foundRoute = route;
                 }
             }
@@ -177,13 +176,13 @@ class Router {
         return foundRoute || this.getRoute(this.defaultPath);
     }
 
-    getUrlParams (){
+    getUrlParams() {
         let params = {};
         let route = this.current;
         let wildcars = route.wildcards;
         let decomposedPath = Route.decomposedPath(window.location.hash);
 
-        wildcars.forEach((wildcard)=>{
+        wildcars.forEach((wildcard) => {
             params[wildcard.name] = decomposedPath[wildcard.index];
         });
 
@@ -200,7 +199,7 @@ class Route {
         this.setWildCard();
     }
 
-    setWildCard () {
+    setWildCard() {
         this.wildcards = Util.getWildcards(this.decomposedPath);
     }
 
@@ -259,7 +258,9 @@ class MovieElement extends HTMLElement {
     getHtmlNode(movie) {
         let el = document.createElement('div');
         let step = movie.vote_average * 10;
-        let color = step > 75 ? 'green' : (()=> {return step > 50 ? 'orange':'red'})();
+        let color = step > 75 ? 'green' : (() => {
+            return step > 50 ? 'orange' : 'red'
+        })();
         let rotate = step > 50 ? 0 : 180;
         let posterUrl = movie.poster_path ? `http://image.tmdb.org/t/p/w185${movie.poster_path}` : notAvailableImg;
         el.innerHTML = `<a href="#/movie/${movie.id}">
@@ -363,7 +364,6 @@ class MovieElement extends HTMLElement {
 }
 
 
-
 class MovielistElement extends HTMLElement {
 
     constructor() {
@@ -376,7 +376,7 @@ class MovielistElement extends HTMLElement {
     updateWithList(callback) {
         callback.then((response) => {
 
-            if(!response.ok) {
+            if (!response.ok) {
                 app.router.routeDefault();
                 return;
             }
@@ -385,7 +385,7 @@ class MovielistElement extends HTMLElement {
                 let tmpElem = document.createElement('div');
 
                 let shadow = this.shadowRoot;
-                Array.from(shadow.childNodes).forEach((elem) =>{
+                Array.from(shadow.childNodes).forEach((elem) => {
                     elem.remove();
                 });
 
@@ -406,10 +406,10 @@ class MovielistElement extends HTMLElement {
         });
     }
 
-    updateWithMovieDetails (callback) {
+    updateWithMovieDetails(callback) {
         callback.then((response) => {
 
-            if(!response.ok) {
+            if (!response.ok) {
                 app.router.routeDefault();
                 return;
             }
@@ -418,12 +418,14 @@ class MovielistElement extends HTMLElement {
                 let tmpElem = document.createElement('div');
 
                 let shadow = this.shadowRoot;
-                Array.from(shadow.childNodes).forEach((elem) =>{
+                Array.from(shadow.childNodes).forEach((elem) => {
                     elem.remove();
                 });
 
                 localStorage.setItem(data.id, JSON.stringify(data));
-                tmpElem.innerHTML = `<movie-details-element data-movie='${data.id}'></movie-details-element><div class='bottom'></div>`;
+                tmpElem.innerHTML =
+                    `<movie-details-element data-movie='${data.id}'></movie-details-element>
+                    <div class='bottom'></div>`;
                 this.shadow.appendChild(tmpElem.firstChild);
             })
         });
@@ -492,9 +494,9 @@ class MovielistElement extends HTMLElement {
         let arrowRightColor = 'yellow';
         let disableColor = '#444444';
 
-        let hrefDown  = (() => {
-            if (data.page > 1 && data.total_pages > 1){
-                return `href="${app.router.pathNoPage}${data.page -1}"`;
+        let hrefDown = (() => {
+            if (data.page > 1 && data.total_pages > 1) {
+                return `href="${app.router.pathNoPage}${data.page - 1}"`;
             } else {
                 arrowLeftColor = disableColor;
                 return "disable";
@@ -502,8 +504,8 @@ class MovielistElement extends HTMLElement {
         })();
 
         let hrefUp = (() => {
-            if (data.page <  data.total_pages){
-                return `href="${app.router.pathNoPage}${data.page +1}"`;
+            if (data.page < data.total_pages) {
+                return `href="${app.router.pathNoPage}${data.page + 1}"`;
             } else {
                 arrowRightColor = disableColor;
                 return "disable";
@@ -512,7 +514,7 @@ class MovielistElement extends HTMLElement {
 
         let tmpElem = document.createElement('div');
         tmpElem.innerHTML =
-            `<div class="navigation ${data.total_pages ===1 ? 'hidden':''}">
+            `<div class="navigation ${data.total_pages === 1 ? 'hidden' : ''}">
                 <span><a ${hrefDown} class="logoWrap">
                     <logo-element rotate="180" class="left" name="arrow" color="${arrowLeftColor}" ></logo-element>
                  </a> 
@@ -709,14 +711,14 @@ class LogoElement extends HTMLElement {
 }
 
 class FooterElement extends HTMLElement {
-    constructor (){
-        super ();
+    constructor() {
+        super();
         this.shadow = this.attachShadow({mode: 'open'});
         this.shadow.appendChild(this.getStyle());
         this.shadow.appendChild(this.getHtmlNode());
     }
 
-    getStyle () {
+    getStyle() {
         let tmpElem = document.createElement('div');
         tmpElem.innerHTML =
             `<style type="text/css">
@@ -734,15 +736,15 @@ class FooterElement extends HTMLElement {
         return tmpElem.firstChild;
     }
 
-    getHtmlNode (text){
+    getHtmlNode(text) {
         let footer = document.createElement('footer');
-        footer.innerHTML = `<h2>${text}</h2>`  ;
+        footer.innerHTML = `<h2>${text}</h2>`;
         return footer;
     }
 
-    setH2 (text) {
+    setH2(text) {
         let shadow = this.shadowRoot;
-        Array.from(shadow.childNodes).forEach((elem) =>{
+        Array.from(shadow.childNodes).forEach((elem) => {
             elem.remove();
         });
 
@@ -753,14 +755,14 @@ class FooterElement extends HTMLElement {
 }
 
 class SearchElement extends HTMLElement {
-    constructor (){
-        super ();
+    constructor() {
+        super();
         this.shadow = this.attachShadow({mode: 'open'});
         this.shadow.appendChild(this.getStyle());
         this.shadow.appendChild(this.getHtmlNode());
     }
 
-    getStyle () {
+    getStyle() {
         let tmpElem = document.createElement('div');
         tmpElem.innerHTML =
             `<style type="text/css">
@@ -779,12 +781,12 @@ class SearchElement extends HTMLElement {
         return tmpElem.firstChild;
     }
 
-    getHtmlNode (text){
+    getHtmlNode(text) {
         let input = document.createElement('input');
         input.setAttribute('type', 'text');
         input.setAttribute('placeholder', 'Search by title');
-        input.addEventListener('keydown', (event) =>{
-            if(event.key === 'Enter') {
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
                 window.location.hash = `#/search/${encodeURI(event.currentTarget.value)}`;
                 event.currentTarget.value = '';
             }
@@ -794,23 +796,29 @@ class SearchElement extends HTMLElement {
 }
 
 class MovieDetailsElement extends HTMLElement {
-    constructor (){
-        super ();
+    constructor() {
+        super();
         this.shadow = this.attachShadow({mode: 'open'});
         this.shadow.appendChild(this.getStyle());
         this.shadow.appendChild(this.getHtmlNode(JSON.parse(localStorage.getItem(this.getAttribute('data-movie')))));
         localStorage.removeItem(this.getAttribute('data-movie'));
     }
 
-    getStyle () {
+    getStyle() {
         let tmpElem = document.createElement('div');
         tmpElem.innerHTML =
             `<style type="text/css">
                 :host {
                     display: block;
-                    width: 1000px;
+                    width: 100%;
                     margin: auto;
                 }
+                
+                @media (min-width: 1146px) {
+                    :host{
+                        width: 1000px;
+                    }
+                  }
                 
                 p {
                     font-size: 17px;
@@ -855,6 +863,10 @@ class MovieDetailsElement extends HTMLElement {
                     padding-top: 40px;
                 }
                 
+                .overview {
+                    font-size: 20px;
+                }
+                
                 .poster {
                     width: 32%;
                     padding-right: 10px;
@@ -885,14 +897,22 @@ class MovieDetailsElement extends HTMLElement {
                    margin-left: 20px;
                 }
                 
+                @media (max-width: 763px) {
+                    .poster, .description{
+                        width: 100%;
+                    }
+                  }
+                
             </style>`;
         return tmpElem.firstChild;
     }
 
-    getHtmlNode (movie){
+    getHtmlNode(movie) {
 
         let step = movie.vote_average * 10;
-        let color = step > 75 ? 'green' : (()=> {return step > 50 ? 'orange':'red'})();
+        let color = step > 75 ? 'green' : (() => {
+            return step > 50 ? 'orange' : 'red'
+        })();
         let rotate = step > 50 ? 0 : 180;
 
         let tmpElem = document.createElement('div');
@@ -912,10 +932,71 @@ class MovieDetailsElement extends HTMLElement {
                      </div>
                     <p class="overview">Overview</p>
                     <p>${movie.overview}</p>
+                    <p class="overview">Reviews</p>
+                    <movie-reviews-element data-movieid="${movie.id}"></movie-reviews-element>
+                    
                 </div>
             </div>`;
 
         return tmpElem.firstChild;
+    }
+}
+
+class MovieReviewsElement extends HTMLElement {
+    constructor() {
+        super();
+        this.shadow = this.attachShadow({mode: 'open'});
+        this.shadow.appendChild(this.getStyle());
+        this.showReviews(this.getAttribute('data-movieid'));
+    }
+
+    getStyle() {
+        let tmpElem = document.createElement('div');
+        tmpElem.innerHTML =
+            `<style type="text/css">
+                :host {
+                    color:white; 
+                } 
+                .author {
+                    text-align: right;
+                    font-weight: bold;
+                }   
+                hr {
+                    color: red;
+                }
+                
+                .reviews:last-child hr{
+                    display: none;
+                }
+                
+                .reviews:last-child   {
+                    padding-bottom: 60px;
+                }
+                      
+            </style>`;
+        return tmpElem.firstChild;
+    }
+
+    showReviews(movieId) {
+
+        movieService.getReviews(movieId).then((response) => {
+            response.json().then((data) => {
+
+                if (!data.results.length) {
+                    data.results = [{content: 'No reviews', author: ''}];
+                }
+
+                data.results.forEach((review) => {
+                    let tmpElem = document.createElement('div');
+                    tmpElem.classList.add('reviews');
+                    tmpElem.innerHTML = `<p class="content">${review.content}</p>
+                                         <p class="author"><i>${review.author}</i></p>
+                                         <hr/>`;
+                    this.shadow.appendChild(tmpElem);
+                });
+            });
+
+        });
     }
 }
 
@@ -927,13 +1008,13 @@ customElements.define('movie-element', MovieElement);
 customElements.define('movielist-element', MovielistElement);
 customElements.define('search-element', SearchElement);
 customElements.define('movie-details-element', MovieDetailsElement);
+customElements.define('movie-reviews-element', MovieReviewsElement);
 
 
 const app = new App();
 app.addModule('movieList', new Module('movielist-container', new MovielistElement()));
 app.addModule('footer', new Module('footer-container', new FooterElement()));
 app.addModule('search', new Module('header', new SearchElement()));
-
 
 
 app.router.addRoute(new Route('', () => {
@@ -976,7 +1057,7 @@ app.router.addRoute(new Route('', () => {
             })())
     }))
     .addRoute(new Route('#/movie/{:movieid}', () => {
-        app.getModule('movieList').composant.updateWithMovieDetails (
+        app.getModule('movieList').composant.updateWithMovieDetails(
             (() => {
                 let params = app.router.getUrlParams();
                 app.getModule('footer').composant.setH2("Movie Details");
