@@ -242,7 +242,7 @@ class Module {
         this.target = target;
         this.composant = composant;
     }
-};
+}
 
 class MovieElement extends HTMLElement {
 
@@ -251,8 +251,6 @@ class MovieElement extends HTMLElement {
         this.shadow = this.attachShadow({mode: 'open'});
         this.shadow.appendChild(this.getStyle());
         this.shadow.appendChild(this.getHtmlNode(movie));
-        MovieElement.count = MovieElement.count || 0;
-        this.setAttribute('id', "movie-" + MovieElement.count++);
     }
 
     getHtmlNode(movie) {
@@ -369,8 +367,6 @@ class MovielistElement extends HTMLElement {
     constructor() {
         super();
         this.shadow = this.attachShadow({mode: 'open'});
-        MovielistElement.count = MovieElement.count || 0;
-        this.setAttribute('id', "movielist-" + MovielistElement.count++);
     }
 
     updateWithList(callback) {
@@ -541,8 +537,6 @@ class ChartElement extends HTMLElement {
         this.shadow = this.attachShadow({mode: 'open'});
         this.shadow.appendChild(this.getStyle(options));
         this.shadow.appendChild(this.getHtmlNode());
-        ChartElement.count = ChartElement.count || 0;
-        this.setAttribute('id', "chart-" + ChartElement.count++);
     }
 
     getHtmlNode() {
@@ -684,9 +678,6 @@ class LogoElement extends HTMLElement {
             rotate: this.getAttribute('rotate') || 0
         }));
         this.shadow.appendChild(icon);
-
-        LogoElement.count = LogoElement.count || 0;
-        this.setAttribute('id', "logo-" + LogoElement.count++);
     }
 
     getHtmlNode(name) {
@@ -724,6 +715,7 @@ class FooterElement extends HTMLElement {
             `<style type="text/css">
                 footer {
                     margin-top: -15px;
+                    position: relative;
                 } 
                 h2 {
                   text-align: center;
@@ -732,13 +724,34 @@ class FooterElement extends HTMLElement {
                   2px 2px rgba(255,255,255, 0.2),
                   3px 3px rgba(255,255,255, 0.2);
                 }
+                
+                logo-element[name="arrow"]{
+                    display: block;
+                    width: 25px;
+                    position: absolute;
+                    top:2px;
+                    left: 10px;              
+                }
+                .back {
+                    position: absolute;
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: yellow;
+                    top:4px;
+                    left: 50px;
+                    display: block;
+                }
             </style>`;
         return tmpElem.firstChild;
     }
 
     getHtmlNode(text) {
         let footer = document.createElement('footer');
-        footer.innerHTML = `<h2>${text}</h2>`;
+        footer.innerHTML =
+            `<a href="javascript:window.history.back()"><logo-element name="arrow" rotate="180" color="yellow"></logo-element>
+                <span class="back">BACK</span>
+            </a>
+               <h2>${text}</h2>`;
         return footer;
     }
 
@@ -1000,7 +1013,6 @@ class MovieReviewsElement extends HTMLElement {
     }
 }
 
-
 customElements.define('footer-element', FooterElement);
 customElements.define('logo-element', LogoElement);
 customElements.define('chart-element', ChartElement);
@@ -1009,6 +1021,16 @@ customElements.define('movielist-element', MovielistElement);
 customElements.define('search-element', SearchElement);
 customElements.define('movie-details-element', MovieDetailsElement);
 customElements.define('movie-reviews-element', MovieReviewsElement);
+
+
+
+
+
+
+
+
+
+
 
 
 const app = new App();
@@ -1022,7 +1044,6 @@ app.router.addRoute(new Route('', () => {
         (() => {
             app.getModule('footer').composant.setH2('Trending - Home Page');
             app.router.setBasePath('#/trending/');
-            console.log('home');
             return movieService.getTrending();
         })());
 }))
@@ -1031,7 +1052,6 @@ app.router.addRoute(new Route('', () => {
             (() => {
                 let params = app.router.getUrlParams();
                 app.getModule('footer').composant.setH2('Trending');
-                console.log('#/trending/{:page}');
                 app.router.setBasePath('#/trending/');
                 return movieService.getTrending(params.page);
             })());
@@ -1041,7 +1061,6 @@ app.router.addRoute(new Route('', () => {
             (() => {
                 let params = app.router.getUrlParams();
                 app.getModule('footer').composant.setH2(`Search : ${decodeURI(params.moviesearch)}`);
-                console.log('#/search/{:moviesearch}/');
                 app.router.setBasePath(`#/search/${params.moviesearch}/`);
                 return movieService.search(params.moviesearch);
             })());
@@ -1049,7 +1068,6 @@ app.router.addRoute(new Route('', () => {
     .addRoute(new Route('#/search/{:moviesearch}/{:page}', () => {
         app.getModule('movieList').composant.updateWithList(
             (() => {
-                console.log('#/search/{:moviesearch}/{:page}');
                 let params = app.router.getUrlParams();
                 app.getModule('footer').composant.setH2(`Search : ${decodeURI(params.moviesearch)}`);
                 app.router.setBasePath(`#/search/${params.moviesearch}/`);
@@ -1061,7 +1079,6 @@ app.router.addRoute(new Route('', () => {
             (() => {
                 let params = app.router.getUrlParams();
                 app.getModule('footer').composant.setH2("Movie Details");
-                console.log('#/movie/{:movieid}');
                 return movieService.getMovie(params.movieid);
             })());
     }));
