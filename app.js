@@ -739,8 +739,15 @@ class FooterElement extends HTMLElement {
                     color: yellow;
                     top:4px;
                     left: 50px;
-                    display: block;
+                    display: block;                
                 }
+                
+                @media (max-width: 620px) {
+                    .back {
+                        display:none;    
+                    }
+                }
+                
             </style>`;
         return tmpElem.firstChild;
     }
