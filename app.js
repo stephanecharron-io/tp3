@@ -1,7 +1,11 @@
+
+
 Array.prototype.clone = function () {
     return this.slice(0);
 };
 
+
+// poster de film pour objet null -> poster not yet available
 const URL_PARAM_REGEX = /\{:(.*)\}/;
 
 let ICONS_SVG = {
@@ -105,6 +109,13 @@ const movieService = {
 };
 
 class Util {
+    /*
+  * path -> #/search/rocky/2
+  * path décomposé -> ["search", "rocky", "2"]
+  * wildcards ->  [{index: 1, name: "moviesearch"},{index: 2, name: "page"}]
+  * return ->  ["search", "moviesearch", "page"]
+  *
+  * */
     static applyWildcardToDecomposedPath(decomposedPath, wildcards) {
         wildcards.forEach(function (wildcard) {
             decomposedPath[wildcard.index] = wildcard.name;
@@ -112,6 +123,11 @@ class Util {
         return decomposedPath;
     }
 
+
+/*
+* decomposedPath -> ["search", "{:moviesearch}", "{:page}"]
+* return -> [{"index":1,"name":"moviesearch"},{"index":2,"name":"page"}]
+* */
     static getWildcards(decomposedPath) {
         let wildcards = [];
         decomposedPath.forEach((value, index) => {
